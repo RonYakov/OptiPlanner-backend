@@ -1,13 +1,13 @@
 # Dependency directories
-node_modules/
-dist/
+/node_modules
+/dist
 
 # Environment variables
 .env
 
 # IDE and editor directories
-.idea/
-.vscode/
+/.idea
+/.vscode
 
 # Logs and runtime data
 logs/
