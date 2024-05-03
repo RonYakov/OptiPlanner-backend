@@ -4,6 +4,7 @@ import { environment } from "../shared/environment/environment";
 import { Amplify } from "aws-amplify";
 import { signIn, signOut, signUp, confirmSignUp, updateUserAttributes } from 'aws-amplify/auth';
 import {ConfirmationUserDto} from "../shared/DTO/confirmation-user.dto";
+import {LoginUserDto} from "../shared/DTO/login-user.dto";
 
 @Injectable()
 export class AuthService {
@@ -12,6 +13,26 @@ export class AuthService {
     Amplify.configure({
       Auth: {Cognito:environment.Cognito}
     })
+  }
+
+  async signIn(user: LoginUserDto) {
+    try {
+      const res = await signIn({
+        username: user.email,
+        password: user.password
+      });
+      return {status: 200, data: "Login successfully!"}; // Return the result from AuthService
+    } catch (error) {
+      if(error.name === 'UserAlreadyAuthenticatedException'){
+        return {status: 4001, data: "There is already a signed in user"}
+      }
+      else if(error.name === 'NotAuthorizedException'){
+        return {status: 4001, data: "Incorrect email or password"}
+      }
+      else if(error.name === 'EmptySignInUserName'){
+        return {status: 4001, data: "Email or password cannot be empty"}
+      }
+    }
   }
 
   async signUp(user: CreateUserDto){
