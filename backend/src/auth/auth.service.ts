@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from "../shared/DTO/create-user.dto";
 import { environment } from "../shared/environment/environment";
 import { Amplify } from "aws-amplify";
-import { signIn, signOut, signUp, confirmSignUp, updateUserAttributes } from 'aws-amplify/auth';
+import { signIn, signOut, signUp, confirmSignUp, updateUserAttributes, resetPassword } from 'aws-amplify/auth';
 import {ConfirmationUserDto} from "../shared/DTO/confirmation-user.dto";
 import {LoginUserDto} from "../shared/DTO/login-user.dto";
 
