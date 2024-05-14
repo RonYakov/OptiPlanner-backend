@@ -23,4 +23,9 @@ export class AuthController {
         return await this.authService.signIn(loginData);
     }
 
+  @Post('/google-sign-up')
+  async googleSignUp(@Body() userToken: { token: string }) {
+    return await this.authService.googleSignUp(userToken);
+  }
+
 }

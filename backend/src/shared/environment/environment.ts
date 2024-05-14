@@ -1,7 +1,7 @@
 
 export const environment = {
   Cognito:{
-    userPoolId:'us-east-1_MCmAXnMok',
-    userPoolClientId: '4i2e8kfqcc1qs8gp8ri45odang',
+    userPoolId:'us-east-1_ZLvNoCIm6',
+    userPoolClientId: '3qlng7r4ig88hpci8fes0ct06a',
   }
 }
