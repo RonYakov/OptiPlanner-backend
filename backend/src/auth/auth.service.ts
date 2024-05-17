@@ -5,14 +5,17 @@ import { Amplify } from "aws-amplify";
 import { signIn, signOut, signUp, confirmSignUp, updateUserAttributes, resetPassword } from 'aws-amplify/auth';
 import {ConfirmationUserDto} from "../shared/DTO/confirmation-user.dto";
 import {LoginUserDto} from "../shared/DTO/login-user.dto";
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
-
+  private readonly googleClient: OAuth2Client;
   constructor() {
     Amplify.configure({
-      Auth: {Cognito:environment.Cognito}
+      Auth: {Cognito: environment.Cognito}
     })
+
+    this.googleClient = new OAuth2Client('756316002330-vqdsffqig8drfgs8iitafeirkah5opii.apps.googleusercontent.com');
   }
 
   async signIn(user: LoginUserDto) {
@@ -23,30 +26,29 @@ export class AuthService {
       });
       return {status: 200, data: "Login successfully!"}; // Return the result from AuthService
     } catch (error) {
-      if(error.name === 'UserAlreadyAuthenticatedException'){
+      if (error.name === 'UserAlreadyAuthenticatedException') {
         return {status: 4001, data: "There is already a signed in user"}
-      }
-      else if(error.name === 'NotAuthorizedException'){
+      } else if (error.name === 'NotAuthorizedException') {
         return {status: 4001, data: "Incorrect email or password"}
-      }
-      else if(error.name === 'EmptySignInUserName'){
+      } else if (error.name === 'EmptySignInUserName') {
         return {status: 4001, data: "Email or password cannot be empty"}
       }
     }
   }
 
-  async signUp(user: CreateUserDto){
+  async signUp(user: CreateUserDto) {
     try {
       const res = await signUp({
         username: user.email,
         password: user.password,
         options: {
-          userAttributes: { name: user.name }
-        }});
+          userAttributes: {name: user.name}
+        }
+      });
 
       return {status: 200, data: "Register successfully! please check your mail box!"}; // Return the result from AuthService
     } catch (error) {
-      if(error.name === 'UsernameExistsException'){
+      if (error.name === 'UsernameExistsException') {
         return {status: 4001, data: "User with this mail already exist!"}
       } else if (error.name === 'InvalidParameterException') {
         return {status: 4001, data: "Invalid mail!"}
@@ -57,7 +59,7 @@ export class AuthService {
     }
   }
 
-  async confirmRegister(confirmationData: ConfirmationUserDto){
+  async confirmRegister(confirmationData: ConfirmationUserDto) {
     try {
       const res = await confirmSignUp({
         username: confirmationData.email,
@@ -66,13 +68,46 @@ export class AuthService {
 
       return {status: 200, data: "Confirmation successfully!"};
     } catch (error) {
-      if(error.name === 'ExpiredCodeException'){
+      if (error.name === 'ExpiredCodeException') {
         return {status: 4001, data: " Invalid code provided, please check your mail and code and request a code again."}
-      } else if (error.name === 'LimitExceededException'){
+      } else if (error.name === 'LimitExceededException') {
         return {status: 4001, data: " Attempt limit exceeded, please try after some time."}
-      } else if (error.name === 'CodeMismatchException'){
+      } else if (error.name === 'CodeMismatchException') {
         return {status: 4001, data: " Invalid verification code provided, please try again."}
       }
+    }
+  }
+
+  async googleSignUp(userTokenObj: { token: string }) {
+    try {
+      const userToken: string = userTokenObj.token;
+      console.log(userToken)
+      // Verify the token with Google
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken: userToken,
+        audience: '756316002330-vqdsffqig8drfgs8iitafeirkah5opii.apps.googleusercontent.com'
+      });
+
+      const payload = ticket.getPayload();
+
+      // Extract user information from the payload
+      const email = payload.email;
+      const name = payload.name; // Or any other user info you want to extract
+
+      // Sign up the user in Cognito
+      const res = await signUp({
+        username: email,
+        password: 'DummyPassword123!', // You can generate a random password here
+        options: {
+          userAttributes: { name }
+        }
+      });
+
+      return { status: 200, data: "Sign up successful!" };
+    } catch (error) {
+      // Handle errors
+      console.error('Google sign up error:', error);
+      return { status: 4001, data: "Google sign up failed." };
     }
   }
 }
