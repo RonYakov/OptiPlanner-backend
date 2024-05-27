@@ -5,3 +5,5 @@ export const environment = {
     userPoolClientId: '3qlng7r4ig88hpci8fes0ct06a',
   }
 }
+
+
