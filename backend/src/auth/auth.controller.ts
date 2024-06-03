@@ -28,4 +28,8 @@ export class AuthController {
     return await this.authService.googleSignUp(userToken);
   }
 
+  @Post('/signOut')
+  async signOut(){
+    return await this.authService.signOut();
+  }
 }
