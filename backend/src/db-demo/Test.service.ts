@@ -10,8 +10,8 @@ export class TestService {
         private testRepository: Repository<Test>,
     ) {}
 
-    async createTest(name: string, description: string){
-        const newTest = this.testRepository.create({ name: name, description: description, last_update: new Date()});
+        async createTest(name: string, description: string, array_test: any[], every: '1' | '2' | '3' | '4'){
+        const newTest = this.testRepository.create({ name: name, description: description, array_test: array_test,last_update: new Date()});
 
         return this.testRepository.save(newTest);
     }

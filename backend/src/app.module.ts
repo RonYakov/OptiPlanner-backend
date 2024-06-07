@@ -4,10 +4,12 @@ import { AppService } from './app.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import {TypeOrmModule} from "@nestjs/typeorm";
-import {environment} from "./shared/environment/environment";
 import {ormConfig} from "./shared/environment/orm.config";
 import {TestService} from "./db-demo/Test.service";
 import {Test} from "./shared/entities/test.entity";
+import {FlexibleEvent} from "./shared/entities/flexible-event.entity";
+import {AbsoluteEvent} from "./shared/entities/absolute-event.entity";
+
 
 
 @Module({
@@ -16,7 +18,7 @@ import {Test} from "./shared/entities/test.entity";
     //   origin: 'http://localhost:4200', // Replace with your Angular app URL
     // }),
       TypeOrmModule.forRoot(ormConfig),
-      TypeOrmModule.forFeature([Test,]),
+      TypeOrmModule.forFeature([Test, FlexibleEvent,AbsoluteEvent]),
   ],
   controllers: [AppController, AuthController],
   providers: [AppService, AuthService,TestService],

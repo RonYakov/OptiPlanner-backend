@@ -8,6 +8,12 @@ export class Test {
     @Column()
     name: string;
 
+    @Column({type: "json",nullable:true})
+    array_test: number[];
+
+    @Column({nullable:true})
+    every: '1' | '2' | '3' | '4' = '1';
+
     @Column({nullable:true})
     description: string;
 

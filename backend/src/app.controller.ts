@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import {TestService} from "./db-demo/Test.service";
 
+
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService ,
@@ -9,7 +10,7 @@ export class AppController {
 
   @Get('/db-demo')
   async writeTest() {
-    return await this.testService.createTest('ido', 'hamilton').then(res => {
+    return await this.testService.createTest('ido', 'hamilton', [{name: 'ido', age: 23}, {type: 'bla bla'}], '2' ).then(res => {
       return res;
     })
   }
