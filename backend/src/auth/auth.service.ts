@@ -25,7 +25,7 @@ export class AuthService {
         password: user.password
       });
       const attributes = await fetchUserAttributes();
-      return {status: 200, data: attributes.name};
+      return {status: 200, data: { name: attributes.name, id: attributes.sub }};
     } catch (error) {
       if (error.name === 'UserAlreadyAuthenticatedException') {
         return {status: 4001, data: "There is already a signed in user"}

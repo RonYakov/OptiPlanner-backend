@@ -11,6 +11,7 @@ export class AbsoluteEvent {
 
     @Column()
     user_id: number;
+    //todo - id should be string
 
     @Column()
     name: string;
