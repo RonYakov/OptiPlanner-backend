@@ -11,7 +11,6 @@ export class AbsoluteEvent {
 
     @Column()
     user_id: number;
-    //todo - id should be string
 
     @Column()
     name: string;
@@ -57,4 +56,7 @@ export class AbsoluteEvent {
 
     @Column({type: "json",nullable:true})
     alarms: EventAlarm[];
+
+    @Column({nullable:true})
+    flexible_event_id: number;
 }
