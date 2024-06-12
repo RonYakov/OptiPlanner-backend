@@ -4,6 +4,29 @@ import {User} from "../../../entities/user.entity";
 import {Repository} from "typeorm";
 import {AbsoluteEvent} from "../../../entities/absolute-event.entity";
 import {EventCategoryEnum} from "../../../enum/event-category.enum";
+import {EventPriorityEnum} from "../../../enum/event-priority.enum";
+import {RepeatTypeEnum} from "../../../enum/repeat-type.enum";
+import {EventAlarm} from "../../../classes/event-alarm";
+
+
+export class AbsoluteEventEntity{
+    user_id: number;
+    name: string;
+    priority: EventPriorityEnum;
+    flexible: boolean = false;
+    start_date: Date;
+    end_date: Date;
+    whole_day: boolean;
+    start_time: Date;
+    end_time: Date;
+    repeat: boolean;
+    repeat_type: RepeatTypeEnum;
+    repeat_interval: number;
+    location: string;
+    category: EventCategoryEnum;
+    description: string;
+    alarms: EventAlarm[];
+}
 
 @Injectable()
 export class AbsoluteEventEntityService {
@@ -12,8 +35,27 @@ export class AbsoluteEventEntityService {
         private absoluteEventRepository: Repository<AbsoluteEvent>,
     ) {}
 
-    async createAbsoluteEvent(absoluteEvent: AbsoluteEvent){
-        const newAbsoluteEvent = this.absoluteEventRepository.create(absoluteEvent);
+    async createAbsoluteEvent(absoluteEvent: AbsoluteEventEntity){
+        const newAbsoluteEvent = this.absoluteEventRepository.create(
+            {
+                user_id: absoluteEvent.user_id,
+                name: absoluteEvent.name,
+                priority: absoluteEvent.priority,
+                flexible: absoluteEvent.flexible,
+                start_date: absoluteEvent.start_date,
+                end_date: absoluteEvent.end_date,
+                whole_day: absoluteEvent.whole_day,
+                start_time: absoluteEvent.start_time,
+                end_time: absoluteEvent.end_time,
+                repeat: absoluteEvent.repeat,
+                repeat_type: absoluteEvent.repeat_type,
+                repeat_interval: absoluteEvent.repeat_interval,
+                location: absoluteEvent.location,
+                category: absoluteEvent.category,
+                description: absoluteEvent.description,
+                alarms: absoluteEvent.alarms
+            }
+        );
         return this.absoluteEventRepository.save(newAbsoluteEvent);
     }
 
@@ -25,8 +67,8 @@ export class AbsoluteEventEntityService {
         return this.absoluteEventRepository.findOneBy({id: eventId});
     }
 
-    async editEvent(eventId: number, absoluteEvent: AbsoluteEvent){
-        const event = await this.absoluteEventRepository.findOneBy({id: eventId});
+    async editEvent(absoluteEvent: AbsoluteEvent){
+        const event = await this.absoluteEventRepository.findOneBy({id: absoluteEvent.id});
         event.name = absoluteEvent.name;
         event.priority = absoluteEvent.priority;
         event.flexible = absoluteEvent.flexible;

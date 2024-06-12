@@ -13,12 +13,12 @@ export class UserEntityService {
         private userRepository: Repository<User>,
     ) {}
 
-    async createUser(user:User){
+    async createUser(name: string, email: string, user_categories: EventCategoryEnum[]){
         const newUser = this.userRepository.create(
             {
-                name: user.name,
-                email: user.email,
-                user_categories: user.user_categories,
+                name: name,
+                email: email,
+                user_categories: user_categories,
                 events: []
             });
 
@@ -32,8 +32,8 @@ export class UserEntityService {
         return this.userRepository.save(user);
     }
 
-    async editUser(userId: number, User: User){
-        const user = await this.userRepository.findOneBy({id: userId});
+    async editUser(User: User){
+        const user = await this.userRepository.findOneBy({id: User.id});
         user.name = User.name;
         user.email = User.email;
         user.user_categories = User.user_categories;
@@ -50,7 +50,7 @@ export class UserEntityService {
         return this.userRepository.findOneBy({id: userId});
     }
 
-    async getUsers(){
-        return this.userRepository.find();
+    async deleteUser(userId: number){
+        return this.userRepository.delete({id: userId});
     }
 }
