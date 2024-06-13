@@ -6,15 +6,17 @@ import { signIn, signOut, signUp, confirmSignUp, updateUserAttributes, resetPass
 import {ConfirmationUserDto} from "../shared/DTO/confirmation-user.dto";
 import {LoginUserDto} from "../shared/DTO/login-user.dto";
 import { OAuth2Client } from 'google-auth-library';
+import {UserEntityService} from "../shared/services/data-base-services/user-entity/user-entity.service";
 
 @Injectable()
 export class AuthService {
   private readonly googleClient: OAuth2Client;
-  constructor() {
+  constructor(
+    private userEntityService: UserEntityService
+  ) {
     Amplify.configure({
       Auth: {Cognito: environment.Cognito}
     })
-
     this.googleClient = new OAuth2Client('756316002330-vqdsffqig8drfgs8iitafeirkah5opii.apps.googleusercontent.com');
   }
 
@@ -24,8 +26,10 @@ export class AuthService {
         username: user.email,
         password: user.password
       });
+
       const attributes = await fetchUserAttributes();
-      return {status: 200, data: { name: attributes.name, id: attributes.sub }};
+      const userFromDb = await this.userEntityService.getUserByEmail(user.email);
+      return {status: 200, data: { name: attributes.name, id: userFromDb.id }};
     } catch (error) {
       if (error.name === 'UserAlreadyAuthenticatedException') {
         return {status: 4001, data: "There is already a signed in user"}
@@ -47,6 +51,7 @@ export class AuthService {
         }
       });
 
+      this.userEntityService.createUser(user.name, user.email, []); //todo- need to add user categories after we preform a page for it
       return {status: 200, data: "Register successfully! please check your mail box!"}; // Return the result from AuthService
     } catch (error) {
       if (error.name === 'UsernameExistsException') {

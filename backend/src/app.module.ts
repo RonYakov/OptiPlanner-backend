@@ -2,7 +2,9 @@ import { Module} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthController } from './auth/auth.controller';
+import { CalendarController } from "./calendar/calendar.controller";
 import { AuthService } from './auth/auth.service';
+import { CalendarService } from "./calendar/calendar.service";
 import {TypeOrmModule} from "@nestjs/typeorm";
 import {ormConfig} from "./shared/environment/orm.config";
 import {TestService} from "./db-demo/Test.service";
@@ -25,8 +27,8 @@ import {
       TypeOrmModule.forRoot(ormConfig),
       TypeOrmModule.forFeature([Test, FlexibleEvent,AbsoluteEvent,User]),
   ],
-  controllers: [AppController, AuthController],
-  providers: [AppService, AuthService,TestService,UserEntityService,AbsoluteEventEntityService],
+  controllers: [AppController, AuthController, CalendarController],
+  providers: [AppService, AuthService, CalendarService, TestService, UserEntityService, AbsoluteEventEntityService],
     exports: [TestService,UserEntityService,AbsoluteEventEntityService]
 })
 export class AppModule {}
