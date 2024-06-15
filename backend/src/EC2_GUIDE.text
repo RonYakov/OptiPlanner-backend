@@ -1,0 +1,9 @@
+This is to connect the ec2 instance: (from the ssh folder)
+
+ ssh -i "opti-planner-kp.pem" ubuntu@ec2-3-80-251-4.compute-1.amazonaws.com
+
+This is for sync the app to the server:
+
+rsync -avz --exclude 'node_modules' --exclude '.git' --exclude '.env' \
+-e "ssh -i /Users/idohirschmann/Desktop/ssh/opti-planner-kp.pem" \
+. ubuntu@ec2-3-80-251-4.compute-1.amazonaws.com:~/app
