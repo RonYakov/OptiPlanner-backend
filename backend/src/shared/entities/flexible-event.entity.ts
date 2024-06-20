@@ -4,7 +4,7 @@ import {RepeatTypeEnum} from "../enum/repeat-type.enum";
 import {EventCategoryEnum} from "../enum/event-category.enum";
 import {EventAlarm} from "../classes/event-alarm";
 
-@Entity('flexible-event')
+@Entity('flexible-events')
 export class FlexibleEvent {
     @PrimaryGeneratedColumn()
     id: number;

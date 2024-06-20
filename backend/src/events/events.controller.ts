@@ -1,0 +1,15 @@
+import { Body, Controller, Post } from '@nestjs/common';
+import { EventsService } from './events.service';
+import {CreateAbsoluteEventDto} from "../shared/DTO/create-event.dto";
+
+@Controller('events')
+export class EventsController {
+  constructor(private eventService: EventsService) {}
+
+  @Post('/create-absolute-event')
+  async createAbsoluteEvent(
+      @Body() eventData: CreateAbsoluteEventDto
+  ) {
+    return await this.eventService.createEvent(eventData);
+  }
+}

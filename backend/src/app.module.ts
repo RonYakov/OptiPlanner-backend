@@ -16,6 +16,8 @@ import {UserEntityService} from "./shared/services/data-base-services/user-entit
 import {
     AbsoluteEventEntityService
 } from "./shared/services/data-base-services/absoulte-event-entity/absolute-event-entity.service";
+import {EventsController} from "./events/events.controller";
+import {EventsService} from "./events/events.service";
 
 
 
@@ -27,8 +29,8 @@ import {
       TypeOrmModule.forRoot(ormConfig),
       TypeOrmModule.forFeature([Test, FlexibleEvent,AbsoluteEvent,User]),
   ],
-  controllers: [AppController, AuthController, CalendarController],
-  providers: [AppService, AuthService, CalendarService, TestService, UserEntityService, AbsoluteEventEntityService],
+  controllers: [AppController, AuthController, CalendarController, EventsController],
+  providers: [AppService, AuthService, CalendarService, TestService, UserEntityService, AbsoluteEventEntityService, EventsService],
     exports: [TestService,UserEntityService,AbsoluteEventEntityService]
 })
 export class AppModule {}
