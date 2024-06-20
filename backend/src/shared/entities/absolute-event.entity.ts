@@ -4,7 +4,7 @@ import {RepeatTypeEnum} from "../enum/repeat-type.enum";
 import {EventCategoryEnum} from "../enum/event-category.enum";
 import {EventAlarm} from "../classes/event-alarm";
 
-@Entity('absolute-event')
+@Entity('absolute-events')
 export class AbsoluteEvent {
     @PrimaryGeneratedColumn()
     id: number;
@@ -39,7 +39,7 @@ export class AbsoluteEvent {
     @Column()
     repeat: boolean;
 
-    @Column()
+    @Column({nullable:true})
     repeat_type: RepeatTypeEnum;
 
     @Column({nullable:true})

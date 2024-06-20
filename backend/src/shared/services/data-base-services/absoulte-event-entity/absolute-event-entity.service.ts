@@ -12,7 +12,7 @@ import {EventAlarm} from "../../../classes/event-alarm";
 export class AbsoluteEventEntity{
     user_id: number;
     name: string;
-    priority: EventPriorityEnum;
+    priority: EventPriorityEnum = EventPriorityEnum.NONE;
     flexible: boolean = false;
     start_date: Date;
     end_date: Date;
@@ -20,12 +20,12 @@ export class AbsoluteEventEntity{
     start_time: Date;
     end_time: Date;
     repeat: boolean;
-    repeat_type: RepeatTypeEnum;
-    repeat_interval: number;
+    repeat_type?: RepeatTypeEnum;
+    repeat_interval?: number;
     location: string;
     category: EventCategoryEnum;
     description: string;
-    alarms: EventAlarm[];
+    alarms?: EventAlarm[];
 }
 
 @Injectable()
@@ -36,6 +36,8 @@ export class AbsoluteEventEntityService {
     ) {}
 
     async createAbsoluteEvent(absoluteEvent: AbsoluteEventEntity){
+        console.log(absoluteEvent);
+
         const newAbsoluteEvent = this.absoluteEventRepository.create(
             {
                 user_id: absoluteEvent.user_id,
