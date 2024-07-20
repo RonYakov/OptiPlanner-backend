@@ -1,3 +1,18 @@
 export enum EventCategoryEnum {
-    OTHER = 1,
+    WORK = 1,
+    PERSONAL,
+    FAMILY,
+    HEALTH,
+    EDUCATION,
+    FINANCE,
+    SOCIAL,
+    TRAVEL,
+    ENTERTAINMENT,
+    SPORTS,
+    MEETING,
+    HOLIDAY,
+    APPOINTMENT,
+    REMINDER,
+    SHOPPING,
+    OTHER
 }
