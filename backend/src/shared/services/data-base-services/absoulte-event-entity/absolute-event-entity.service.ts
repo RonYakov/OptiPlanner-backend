@@ -53,7 +53,7 @@ export class AbsoluteEventEntityService {
                 repeat_type: absoluteEvent.repeat_type,
                 repeat_interval: absoluteEvent.repeat_interval,
                 location: absoluteEvent.location,
-                category: absoluteEvent.category,
+                category: (EventCategoryEnum[absoluteEvent.category as unknown as keyof typeof EventCategoryEnum]),
                 description: absoluteEvent.description,
                 alarms: absoluteEvent.alarms
             }
