@@ -12,7 +12,7 @@ export class CalendarService {
         }
         try {
             const events = await this.absoluteEventEntityService.getUserEvents(userId);
-            console.log("events send");
+            //console.log("events send");
             return {status: 200, data: events};
         } catch (error) {
             console.log("events not send");
