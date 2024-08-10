@@ -9,6 +9,7 @@ import {EventAlarm} from "../../../classes/event-alarm";
 
 
 export class AbsoluteEventEntity{
+    id?: number;
     user_id: number;
     name: string;
     priority: EventPriorityEnum = EventPriorityEnum.NONE;
@@ -35,8 +36,6 @@ export class AbsoluteEventEntityService {
     ) {}
 
     async createAbsoluteEvent(absoluteEvent: AbsoluteEventEntity){
-        console.log(absoluteEvent);
-
         const newAbsoluteEvent = this.absoluteEventRepository.create(
             {
                 user_id: absoluteEvent.user_id,
@@ -68,7 +67,7 @@ export class AbsoluteEventEntityService {
         return this.absoluteEventRepository.findOneBy({id: eventId});
     }
 
-    async editEvent(absoluteEvent: AbsoluteEvent){
+    async editEvent(absoluteEvent: AbsoluteEventEntity){
         const event = await this.absoluteEventRepository.findOneBy({id: absoluteEvent.id});
         event.name = absoluteEvent.name;
         event.priority = absoluteEvent.priority;

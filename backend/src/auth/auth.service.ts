@@ -51,8 +51,8 @@ export class AuthService {
         }
       });
 
-      this.userEntityService.createUser(user.name, user.email, []); //todo- need to add user categories after we preform a page for it
-      return {status: 200, data: "Register successfully! please check your mail box!"}; // Return the result from AuthService
+      this.userEntityService.createUser(user.name, user.email, []);
+      return {status: 200, data: "Register successfully! please check your mail box!"};
     } catch (error) {
       if (error.name === 'UsernameExistsException') {
         return {status: 4001, data: "User with this mail already exist!"}
