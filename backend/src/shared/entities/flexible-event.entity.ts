@@ -1,8 +1,6 @@
-import {Entity, Column, PrimaryGeneratedColumn, CreateDateColumn} from 'typeorm';
+import {Entity, Column, PrimaryGeneratedColumn} from 'typeorm';
 import {EventPriorityEnum} from "../enum/event-priority.enum";
-import {RepeatTypeEnum} from "../enum/repeat-type.enum";
 import {EventCategoryEnum} from "../enum/event-category.enum";
-import {EventAlarm} from "../classes/event-alarm";
 
 @Entity('flexible-events')
 export class FlexibleEvent {
@@ -19,7 +17,13 @@ export class FlexibleEvent {
     priority: EventPriorityEnum;
 
     @Column()
-    flexible: boolean = false;
+    flexible: boolean;
+
+    @Column()
+    optimal_start_date: Date;
+
+    @Column()
+    optimal_end_date: Date;
 
     @Column()
     from_date: Date;
@@ -31,22 +35,16 @@ export class FlexibleEvent {
     whole_day: boolean;
 
     @Column()
+    optimal_start_time: Date;
+
+    @Column()
+    optimal_end_time: Date;
+
+    @Column()
     from_time: Date;
 
     @Column()
     until_time: Date;
-
-    @Column()
-    total_time_needed: number; // in minutes
-
-    @Column()
-    repeat: boolean;
-
-    @Column()
-    repeat_type: RepeatTypeEnum;
-
-    @Column({nullable:true})
-    repeat_interval: number;
 
     @Column({nullable:true})
     location: string;
@@ -56,7 +54,4 @@ export class FlexibleEvent {
 
     @Column({nullable:true})
     description: string;
-
-    @Column({type: "json",nullable:true})
-    alarms: EventAlarm[];
 }

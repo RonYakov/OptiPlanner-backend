@@ -18,6 +18,9 @@ import {
 } from "./shared/services/data-base-services/absoulte-event-entity/absolute-event-entity.service";
 import {EventsController} from "./events/events.controller";
 import {EventsService} from "./events/events.service";
+import {
+    FlexibleEventEntityService
+} from "./shared/services/data-base-services/flexible-event-entity/flexible-event-entity.service";
 
 
 
@@ -30,7 +33,7 @@ import {EventsService} from "./events/events.service";
       TypeOrmModule.forFeature([Test, FlexibleEvent,AbsoluteEvent,User]),
   ],
   controllers: [AppController, AuthController, CalendarController, EventsController],
-  providers: [AppService, AuthService, CalendarService, TestService, UserEntityService, AbsoluteEventEntityService, EventsService],
-    exports: [TestService,UserEntityService,AbsoluteEventEntityService]
+  providers: [AppService, AuthService, CalendarService, TestService, UserEntityService, AbsoluteEventEntityService,FlexibleEventEntityService, EventsService],
+    exports: [TestService,UserEntityService,AbsoluteEventEntityService,FlexibleEventEntityService]
 })
 export class AppModule {}

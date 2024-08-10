@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
-import {Repository} from "typeorm";
+import {LessThanOrEqual, MoreThanOrEqual, Repository} from "typeorm";
 import {AbsoluteEvent} from "../../../entities/absolute-event.entity";
 import {EventCategoryEnum} from "../../../enum/event-category.enum";
 import {EventPriorityEnum} from "../../../enum/event-priority.enum";
@@ -36,7 +36,8 @@ export class AbsoluteEventEntityService {
     ) {}
 
     async createAbsoluteEvent(absoluteEvent: AbsoluteEventEntity){
-        const newAbsoluteEvent = this.absoluteEventRepository.create(
+        let newAbsoluteEvent:any;
+         newAbsoluteEvent = this.absoluteEventRepository.create(
             {
                 user_id: absoluteEvent.user_id,
                 name: absoluteEvent.name,
@@ -47,7 +48,7 @@ export class AbsoluteEventEntityService {
                 whole_day: absoluteEvent.whole_day,
                 start_time: absoluteEvent.start_time,
                 end_time: absoluteEvent.end_time,
-                repeat: absoluteEvent.repeat,
+                repeat: false,
                 repeat_type: absoluteEvent.repeat_type,
                 repeat_interval: absoluteEvent.repeat_interval,
                 location: absoluteEvent.location,
@@ -98,6 +99,16 @@ export class AbsoluteEventEntityService {
 
     async getEventByDate(date: Date){
         return this.absoluteEventRepository.findBy({start_date: date});
+    }
+
+    async getEventsByDateRange(userId: number,from: Date, to: Date) {
+        return this.absoluteEventRepository.find({
+            where: {
+                user_id: userId,
+                start_date: MoreThanOrEqual(from),
+                end_date: LessThanOrEqual(to)
+            }
+        });
     }
 
     async getEventByCategory(category: EventCategoryEnum){

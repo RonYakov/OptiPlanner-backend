@@ -21,4 +21,11 @@ export class AppController {
       return res;
     })
   }
+
+  @Get('/db-demo/get-events-by-date')
+  async getEventsByDate() {
+    return await this.testService.getEventsByDates().then(res => {
+      return res;
+    })
+  }
 }

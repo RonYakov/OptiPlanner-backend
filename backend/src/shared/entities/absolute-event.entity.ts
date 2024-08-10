@@ -15,7 +15,7 @@ export class AbsoluteEvent {
     @Column()
     name: string;
 
-    @Column()
+    @Column({nullable:true})
     priority: EventPriorityEnum;
 
     @Column()
@@ -37,7 +37,7 @@ export class AbsoluteEvent {
     end_time: Date;
 
     @Column()
-    repeat: boolean;
+    repeat: boolean = false;
 
     @Column({nullable:true})
     repeat_type: RepeatTypeEnum;
