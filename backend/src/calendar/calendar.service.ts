@@ -18,7 +18,6 @@ export class CalendarService {
             return {status: 4001, data: "There was an error getting user events"};
         }
     }
-}
 
     async deleteEvent(eventId: number){
         if (!eventId) {

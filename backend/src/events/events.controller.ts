@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {Body, Controller, Logger, Post, Get} from '@nestjs/common';
 import { EventsService } from './events.service';
 import {CreateAbsoluteEventDto} from "../shared/DTO/create-event.dto";
 import {EditAbsoluteEventDto} from "../shared/DTO/edit-event.dto";
@@ -20,5 +20,12 @@ export class EventsController {
   ) {
         return await this.eventService.editEvent(eventData);
     }
+
+
+  @Post('place-event')
+  async placeEvent(@Body() newEvent: CreateAbsoluteEventDto) {
+    const result = await this.eventService.advancedPlacementHelper(newEvent, []);
+    return result;
+  }
 
 }
