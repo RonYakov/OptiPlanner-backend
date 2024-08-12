@@ -10,7 +10,7 @@ export class FlexibleEventEntity{
     id?: number;
     user_id: number;
     name: string;
-    priority: EventPriorityEnum = EventPriorityEnum.NONE;
+    priority: EventPriorityEnum;
     flexible: boolean = true;
     optimal_start_date: Date;
     optimal_end_date: Date;
