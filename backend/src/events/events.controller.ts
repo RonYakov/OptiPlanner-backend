@@ -1,6 +1,6 @@
 import {Body, Controller, Logger, Post, Get} from '@nestjs/common';
 import { EventsService } from './events.service';
-import {CreateAbsoluteEventDto} from "../shared/DTO/create-event.dto";
+import {CreateEventDto} from "../shared/DTO/create-event.dto";
 import {EditAbsoluteEventDto} from "../shared/DTO/edit-event.dto";
 
 @Controller('events')
@@ -9,7 +9,7 @@ export class EventsController {
 
   @Post('/create-absolute-event')
   async createAbsoluteEvent(
-      @Body() eventData: CreateAbsoluteEventDto
+      @Body() eventData: CreateEventDto
   ) {
     return await this.eventService.createEvent(eventData);
   }
@@ -23,8 +23,10 @@ export class EventsController {
 
 
   @Post('place-event')
-  async placeEvent(@Body() newEvent: CreateAbsoluteEventDto) {
+  async placeEvent(@Body() newEvent: CreateEventDto) {
     const result = await this.eventService.advancedPlacementHelper(newEvent, []);
+
+    console.log('result: ', result);
     return result;
   }
 

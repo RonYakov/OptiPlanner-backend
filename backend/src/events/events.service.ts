@@ -2,7 +2,7 @@ import {Injectable, Logger} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AbsoluteEvent } from '../shared/entities/absolute-event.entity';
-import {CreateAbsoluteEventDto} from "../shared/DTO/create-event.dto";
+import {CreateEventDto} from "../shared/DTO/create-event.dto";
 import { AbsoluteEventEntityService, AbsoluteEventEntity } from "../shared/services/data-base-services/absoulte-event-entity/absolute-event-entity.service";
 import {EditAbsoluteEventDto} from "../shared/DTO/edit-event.dto";
 import {FlexibleEvent} from "../shared/entities/flexible-event.entity";
@@ -22,7 +22,7 @@ export class EventsService {
         private flexibleEventService: FlexibleEventEntityService,
     ) {}
 
-    async createEvent(eventData: CreateAbsoluteEventDto){
+    async createEvent(eventData: CreateEventDto){
         /*
         some logic:
         1. filtering which event are we working on
@@ -53,23 +53,26 @@ export class EventsService {
 
 
     //if this method gets multiple events, its can only be cause of repeated events (which is only absolute type)
-    async advancedPlacement(events: CreateAbsoluteEventDto[]): Promise<void> {
-        let eventsCopy: CreateAbsoluteEventDto[] = events.slice();
+    async advancedPlacement(events: CreateEventDto[]): Promise<void> {
+        let eventsCopy: CreateEventDto[] = events.slice();
         let flexibleEventsThatChangedPreviously: FlexibleEvent[] = [];
         let isChanged: boolean = true;
 
-        for (let event of events) {
-            if (await this.advancedPlacementHelper(event, flexibleEventsThatChangedPreviously)){
-
-            } else {
+        for (let event of eventsCopy) {
+            if (!await this.advancedPlacementHelper(event, flexibleEventsThatChangedPreviously)) {
                 isChanged = false;
                 break;
             }
         }
+        if(isChanged){
+            //TODO: update the events in the database
+        } else {
+            //TODO: return error
+        }
     }
 
     async advancedPlacementHelper(
-        newEvent: CreateAbsoluteEventDto,
+        newEvent: CreateEventDto,
         flexibleEventsThatChangedPreviously: FlexibleEvent[]
     ): Promise<boolean> {
         const { startDate, endDate, startTime, endTime } = this.extractEventDates(newEvent);
@@ -177,7 +180,7 @@ export class EventsService {
         }
     }
 
-    private extractEventDates(event: CreateAbsoluteEventDto): { startDate: Date, endDate: Date, startTime: string, endTime: string } {
+    private extractEventDates(event: CreateEventDto): { startDate: Date, endDate: Date, startTime: string, endTime: string } {
         const startDate = new Date(event.flexible ? event.from_flexible_date : event.start_date);
         const endDate = new Date(event.flexible ? event.until_flexible_date : event.end_date);
         const startTime = this.extractTime(event.flexible ? event.from_flexible_time : event.start_time);
@@ -186,7 +189,7 @@ export class EventsService {
         return { startDate, endDate, startTime, endTime };
     }
 
-    private extractFlexibleExactDates(event: CreateAbsoluteEventDto): { exactStartDate: Date, exactEndDate: Date, exactStartTime: string, exactEndTime: string } {
+    private extractFlexibleExactDates(event: CreateEventDto): { exactStartDate: Date, exactEndDate: Date, exactStartTime: string, exactEndTime: string } {
         const exactStartDate = new Date(event.start_date);
         const exactEndDate = new Date(event.end_date);
         const exactStartTime = this.extractTime(event.start_time);
@@ -264,7 +267,7 @@ export class EventsService {
 
     async isEventOverlapping(
         event1: FlexibleEvent,
-        event2: CreateAbsoluteEventDto,
+        event2: CreateEventDto,
         flexibleEventsThatChangedPreviously: FlexibleEvent[]
     ): Promise<boolean> {
         const event2StartDate = new Date(event2.flexible ? event2.from_flexible_date : event2.start_date);
@@ -361,7 +364,7 @@ export class EventsService {
     private findAvailableSlot(
         d: Date,
         event1: FlexibleEvent,
-        event2: CreateAbsoluteEventDto,
+        event2: CreateEventDto,
         len: number,
         event2StartDate: Date,
         event2StartMinutes: number,
@@ -411,7 +414,7 @@ export class EventsService {
         event.optimal_end_time = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), intervalEnd / 60, intervalEnd % 60));
     }
 
-    private findOriginalEventSpot(newEvent: CreateAbsoluteEventDto, overlappingAbsoluteEvents: AbsoluteEvent[], overlappingFlexibleEvents: FlexibleEvent[]): boolean {
+    private findOriginalEventSpot(newEvent: CreateEventDto, overlappingAbsoluteEvents: AbsoluteEvent[], overlappingFlexibleEvents: FlexibleEvent[]): boolean {
         if (!newEvent.flexible || !newEvent.from_flexible_date || !newEvent.until_flexible_date || !newEvent.from_flexible_time || !newEvent.until_flexible_time) {
             console.log("Event is not flexible or missing flexible date/time information");
             return false;
@@ -449,7 +452,7 @@ export class EventsService {
         return false;
     }
 
-    private updateOriginalEventOptimalTimes(event: CreateAbsoluteEventDto, d: Date, intervalStart: number, intervalEnd: number): void {
+    private updateOriginalEventOptimalTimes(event: CreateEventDto, d: Date, intervalStart: number, intervalEnd: number): void {
         event.start_date = new Date(d);
         event.end_date = new Date(d);
         event.start_time = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), intervalStart / 60, intervalStart % 60));
@@ -458,7 +461,7 @@ export class EventsService {
 
     private findAvailableSlotInDay(
         currentDate: Date,
-        newEvent: CreateAbsoluteEventDto,
+        newEvent: CreateEventDto,
         eventDuration: number,
         overlappingAbsoluteEvents: AbsoluteEvent[],
         overlappingFlexibleEvents: FlexibleEvent[]
