@@ -21,4 +21,9 @@ export class EditAbsoluteEventDto {
     category: EventCategoryEnum;
     description: string;
     alarms?: EventAlarm[];
+    from_flexible_date?: Date;
+    until_flexible_date?: Date;
+    from_flexible_time?: Date;
+    until_flexible_time?: Date;
+    flexible_event_id?: number;
 }

@@ -3,7 +3,7 @@ import {RepeatTypeEnum} from "../enum/repeat-type.enum";
 import {EventCategoryEnum} from "../enum/event-category.enum";
 import {EventAlarm} from "../classes/event-alarm";
 
-export class CreateAbsoluteEventDto {
+export class CreateEventDto {
     user_id: number;
     name: string;
     priority: EventPriorityEnum;
