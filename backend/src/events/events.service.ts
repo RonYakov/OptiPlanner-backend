@@ -10,6 +10,7 @@ import { FlexibleEventEntityService, FlexibleEventEntity } from "../shared/servi
 import {EventPriorityEnum} from "../shared/enum/event-priority.enum";
 import {EventCategoryEnum} from "../shared/enum/event-category.enum";
 import {parse} from "ts-jest";
+import {RepeatTypeEnum} from "../shared/enum/repeat-type.enum";
 
 @Injectable()
 export class EventsService {
@@ -38,10 +39,39 @@ export class EventsService {
         return this.absoluteEventService.editEvent(eventData);
     }
 
+    createRepeatedEvents(eventData: CreateEventDto){
+        let repeatedEvents: CreateEventDto[] = [];
+
+        for(let i = 0; i <= eventData.repeat_interval; i++){
+            let newEvent = {...eventData};
+            newEvent.repeat = false;
+            newEvent.start_date = new Date(newEvent.start_date);
+            newEvent.end_date = new Date(newEvent.end_date);
+
+            if (eventData.repeat_type.toString() === RepeatTypeEnum.DAILY.toString()) {
+                newEvent.start_date.setDate(newEvent.start_date.getDate() + i);
+                newEvent.end_date.setDate(newEvent.end_date.getDate() + i);
+            } else if (eventData.repeat_type.toString() === RepeatTypeEnum.WEEKLY.toString()) {
+                newEvent.start_date.setDate(newEvent.start_date.getDate() + i * 7);
+                newEvent.end_date.setDate(newEvent.end_date.getDate() + i * 7);
+            } else if (eventData.repeat_type.toString() === RepeatTypeEnum.MONTHLY.toString()) {
+                newEvent.start_date.setMonth(newEvent.start_date.getMonth() + i);
+                newEvent.end_date.setMonth(newEvent.end_date.getMonth() + i);
+            } else if (eventData.repeat_type.toString() === RepeatTypeEnum.YEARLY.toString()) {
+                newEvent.start_date.setFullYear(newEvent.start_date.getFullYear() + i);
+                newEvent.end_date.setFullYear(newEvent.end_date.getFullYear() + i);
+            }
+
+            repeatedEvents.push(newEvent);
+        }
+
+        return repeatedEvents;
+    }
+
 
 
     /*
-    1. repeated events function: creates repeated events list. ido
+    1. repeated events function: creates repeated events list. ido ^
     2. basic placement function: checks if the event can be placed in the calendar. ido
     3. advanced placement function: checks if the event can be placed in the calendar with additional conditions
         3.1. this function calls the events in the date range of each event in the list
@@ -52,7 +82,7 @@ export class EventsService {
      */
 
 
-    //if this method gets multiple events, its can only be cause of repeated events (which is only absolute type)
+    //if this method gets multiple events, its can only because of repeated events (which is only absolute type)
     async advancedPlacement(events: CreateEventDto[]): Promise<void> {
         let eventsCopy: CreateEventDto[] = events.slice();
         let flexibleEventsThatChangedPreviously: FlexibleEvent[] = [];
