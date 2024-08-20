@@ -18,7 +18,7 @@ export class EventsService {
         @InjectRepository(AbsoluteEvent)
         private readonly absoluteEventRepository: Repository<AbsoluteEvent>,
         @InjectRepository(FlexibleEvent)
-        private readonly flexibleEventRepository: Repository<AbsoluteEvent>,
+        private readonly flexibleEventRepository: Repository<FlexibleEvent>,
         private absoluteEventService: AbsoluteEventEntityService,
         private flexibleEventService: FlexibleEventEntityService,
     ) {}
@@ -31,11 +31,21 @@ export class EventsService {
          2.1 if yes , proceed
          2.2 if no , return error/message/code
          */
-        console.log(eventData.user_id);
-        return this.absoluteEventService.createAbsoluteEvent(eventData);
+        // console.log(eventData.user_id);
+        // return this.absoluteEventService.createAbsoluteEvent(eventData);
+
+        let newEvent: CreateEventDto[] = [];
+        if (eventData.repeat) {
+            newEvent = this.createRepeatedEvents(eventData);
+        } else {
+            newEvent.push(eventData);
+        }
+
+        await this.advancedPlacement(newEvent);
     }
 
     async editEvent(eventData: EditAbsoluteEventDto) {
+        //todo: edit the event the new way
         return this.absoluteEventService.editEvent(eventData);
     }
 
@@ -95,10 +105,44 @@ export class EventsService {
             }
         }
         if(isChanged){
-            //TODO: update the events in the database
+            for(let event of eventsCopy) {
+                if(event.flexible){
+                    let newFlexibleEvent = this.createFlexEventForDB(event);
+                    await this.flexibleEventService.createAbsoluteEvent(newFlexibleEvent);
+                } else {
+                    await this.absoluteEventService.createAbsoluteEvent(event);
+                }
+            }
+            for(let event of flexibleEventsThatChangedPreviously){
+                await this.flexibleEventService.editFlexibleEvent(event);
+            }
         } else {
+            console.log("Event could not be placed");
             //TODO: return error
         }
+    }
+
+    createFlexEventForDB(event: CreateEventDto): FlexibleEventEntity {
+        const newFlexibleEvent = this.flexibleEventRepository.create({
+            user_id: event.user_id,
+            name: event.name,
+            priority: event.priority,
+            flexible: event.flexible,
+            optimal_start_date: event.start_date ?? new Date(),
+            optimal_end_date: event.end_date ?? new Date(),
+            from_date: event.from_flexible_date ?? event.start_date ?? new Date(),
+            until_date: event.until_flexible_date ?? event.end_date ?? new Date(),
+            whole_day: false,
+            optimal_start_time: event.start_time ?? new Date(),
+            optimal_end_time: event.end_time ?? new Date(),
+            from_time: event.from_flexible_time ?? event.start_time ?? new Date(),
+            until_time: event.until_flexible_time ?? event.end_time ?? new Date(),
+            location: event.location,
+            category: event.category,
+            description: event.description,
+        });
+
+        return newFlexibleEvent as FlexibleEventEntity;
     }
 
     async advancedPlacementHelper(
@@ -107,23 +151,23 @@ export class EventsService {
     ): Promise<boolean> {
         const { startDate, endDate, startTime, endTime } = this.extractEventDates(newEvent);
 
+        const absoluteEvents = await this.absoluteEventService.getEventsByDateRange(newEvent.user_id, startDate, endDate);
         const overlappingAbsoluteEvents = this.findOverlappingAbsoluteEvents(
-            this.mockAbsoluteEvents,
+            absoluteEvents,
             startDate,
             endDate,
             startTime,
             endTime
         );
 
+        const flexibleEvents = await this.flexibleEventService.getFlexibleEventsByDateRange(newEvent.user_id, startDate, endDate);
         const overlappingFlexibleEvents = this.findOverlappingFlexibleEvents(
-            this.mockFlexibleEvents.concat(flexibleEventsThatChangedPreviously),
+            flexibleEvents.concat(flexibleEventsThatChangedPreviously),
             startDate,
             endDate,
             startTime,
             endTime
         );
-
-        //todo: add the events from the database^
 
         if (!newEvent.flexible && overlappingFlexibleEvents.length === 0) {
             console.log("No flexible events overlap with the new event");
@@ -151,16 +195,18 @@ export class EventsService {
 
         const { exactStartDate, exactEndDate, exactStartTime, exactEndTime } = this.extractFlexibleExactDates(newEvent);
 
+        const absoluteExactEvents = await this.absoluteEventService.getEventsByDateRange(newEvent.user_id, exactStartDate, exactEndDate);
         const overlappingExactAbsoluteEvents = this.findOverlappingAbsoluteEvents(
-            this.mockAbsoluteEvents,
+            absoluteExactEvents,
             exactStartDate,
             exactEndDate,
             exactStartTime,
             exactEndTime
         );
 
+        const flexibleExactEvents = await this.flexibleEventService.getFlexibleEventsByDateRange(newEvent.user_id, exactStartDate, exactEndDate);
         const overlappingExactFlexibleEvents = this.findOverlappingFlexibleEvents(
-            this.mockFlexibleEvents.concat(flexibleEventsThatChangedPreviously),
+            flexibleExactEvents.concat(flexibleEventsThatChangedPreviously),
             exactStartDate,
             exactEndDate,
             exactStartTime,
@@ -311,12 +357,12 @@ export class EventsService {
             until_time: event1.until_time
         };
 
-        const overlappingEvents = this.getOverlappingEvents(eventRange, flexibleEventsThatChangedPreviously);
+        const overlappingEvents = this.getOverlappingEvents(event1.user_id, eventRange, flexibleEventsThatChangedPreviously);
 
         const len = this.calculateEventLength(event1);
 
         for (let d = new Date(eventRange.from_date); d <= eventRange.until_date; d.setUTCDate(d.getUTCDate() + 1)) {
-            if (this.findAvailableSlot(d, event1, event2, len, event2StartDate, event2StartMinutes, event2EndMinutes, overlappingEvents)) {
+            if (this.findAvailableSlot(d, event1, event2, len, event2StartDate, event2StartMinutes, event2EndMinutes, await overlappingEvents)) {
                 return true;
             }
         }
@@ -324,27 +370,28 @@ export class EventsService {
         return false;
     }
 
-    private getOverlappingEvents(
+    private async getOverlappingEvents(
+        userId: number,
         eventRange: { from_date: Date, until_date: Date, from_time: Date, until_time: Date },
         flexibleEventsThatChangedPreviously: FlexibleEvent[]
-    ): { absolute: AbsoluteEvent[], flexible: FlexibleEvent[] } {
+    ): Promise<{ absolute: AbsoluteEvent[], flexible: FlexibleEvent[] }> {
         // Create Maps to store unique events, giving priority to changed events
         const flexibleEventsMap = new Map<number, FlexibleEvent>();
 
-        const absoluteEvents = this.mockAbsoluteEvents.filter(event => this.isAbsoluteEventDateOverlapping(event, eventRange));
+        let absoluteEvents = await this.absoluteEventService.getEventsByDateRange(userId, eventRange.from_date, eventRange.until_date);
+        absoluteEvents = absoluteEvents.filter(event => this.isAbsoluteEventDateOverlapping(event, eventRange));
 
         flexibleEventsThatChangedPreviously.forEach(event => {
             if (this.isFlexibleEventDateOverlapping(event, eventRange)) {
                 flexibleEventsMap.set(event.id, event);
             }
         });
-        this.mockFlexibleEvents.forEach(event => {
+        let flexibleEventsDB = await this.flexibleEventService.getFlexibleEventsByDateRange(userId, eventRange.from_date, eventRange.until_date);
+        flexibleEventsDB.forEach(event => {
             if (this.isFlexibleEventDateOverlapping(event, eventRange) && !flexibleEventsMap.has(event.id)) {
                 flexibleEventsMap.set(event.id, event);
             }
         });
-
-        // TODO: Add events from the database for both absolute and flexible events
 
         const flexibleEvents = Array.from(flexibleEventsMap.values());
 
