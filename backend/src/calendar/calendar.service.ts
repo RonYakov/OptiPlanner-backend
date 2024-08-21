@@ -55,8 +55,9 @@ export class CalendarService {
             return {status: 4002, data: "Event ID is undefined"};
         }
         try {
-            const result = await this.absoluteEventEntityService.deleteEvent(eventId);
-            return {status: 200, data: result};
+            let result1 = await this.absoluteEventEntityService.deleteEvent(eventId);
+            let result2 = await this.flexibleEventEntityService.deleteFlexibleEvent(eventId);
+            return {status: 200, data: {result1, result2}};
         } catch (error) {
             console.log("event not deleted");
             return {status: 4001, data: "There was an error deleting the event"};
