@@ -100,13 +100,23 @@ export class FlexibleEventEntityService {
     }
 
     async getFlexibleEventsByDateRange(userId: number,from: Date, to: Date) {
-        return this.flexibleEventRepository.find({
-            where: {
-                user_id: userId,
-                optimal_start_date: MoreThanOrEqual(from),
-                optimal_end_date: LessThanOrEqual(to)
-            }
-        });
+        if(from.getDay() == to.getDay() && from.getMonth() == to.getMonth() && from.getFullYear() == to.getFullYear()) {
+            return this.flexibleEventRepository.find({
+                where: {
+                    user_id: userId,
+                    optimal_start_date: from
+                }
+            });
+        }
+        else{
+            return this.flexibleEventRepository.find({
+                where: {
+                    user_id: userId,
+                    optimal_start_date: MoreThanOrEqual(from),
+                    optimal_end_date: LessThanOrEqual(to)
+                }
+            });
+        }
     }
 
     async getFlexibleEventByCategory(category: EventCategoryEnum){

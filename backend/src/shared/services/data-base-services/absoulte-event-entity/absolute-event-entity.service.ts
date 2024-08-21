@@ -102,13 +102,22 @@ export class AbsoluteEventEntityService {
     }
 
     async getEventsByDateRange(userId: number,from: Date, to: Date) {
-        return this.absoluteEventRepository.find({
-            where: {
-                user_id: userId,
-                start_date: MoreThanOrEqual(from),
-                end_date: LessThanOrEqual(to)
-            }
-        });
+        if(from.getDay() == to.getDay() && from.getMonth() == to.getMonth() && from.getFullYear() == to.getFullYear()) {
+            return this.absoluteEventRepository.find({
+                where: {
+                    user_id: userId,
+                    start_date: from
+                }
+            });
+        } else {
+            return this.absoluteEventRepository.find({
+                where: {
+                    user_id: userId,
+                    start_date: MoreThanOrEqual(from),
+                    end_date: LessThanOrEqual(to)
+                }
+            });
+        }
     }
 
     async getEventByCategory(category: EventCategoryEnum){

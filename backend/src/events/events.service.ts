@@ -24,6 +24,16 @@ export class EventsService {
     ) {}
 
     async createEvent(eventData: CreateEventDto){
+        const genericStartDate = new Date(new Date(eventData.start_date).setHours(0, 0, 0, 0));
+        eventData.start_date = genericStartDate;
+        eventData.end_date = genericStartDate;
+
+        if (eventData.flexible) {
+            const genericFlexStartDate = new Date(new Date(eventData.from_flexible_date).setHours(0, 0, 0, 0));
+            const genericFlexEndDate = new Date(new Date(eventData.until_flexible_date).setHours(0, 0, 0, 0));
+            eventData.from_flexible_date = genericFlexStartDate;
+            eventData.until_flexible_date = genericFlexEndDate;
+        }
         /*
         some logic:
         1. filtering which event are we working on
