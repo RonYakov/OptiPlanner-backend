@@ -3,7 +3,7 @@ import {RepeatTypeEnum} from "../enum/repeat-type.enum";
 import {EventCategoryEnum} from "../enum/event-category.enum";
 import {EventAlarm} from "../classes/event-alarm";
 
-export class EditAbsoluteEventDto {
+export class EditEventDto {
     id: number;
     user_id: number;
     name: string;

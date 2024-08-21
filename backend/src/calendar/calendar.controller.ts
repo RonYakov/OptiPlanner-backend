@@ -8,7 +8,8 @@ export class CalendarController {
 
     @Get('/getUserEvents')
     async getUserEvents(@Query('userid') userId: string) {
-        return await this.calendarService.getUserEvents(parseInt(userId));
+        let events = await this.calendarService.getUserEvents(parseInt(userId));
+        return events;
     }
 
     @Delete('/deleteEvent')

@@ -34,6 +34,8 @@ export class FlexibleEventEntityService {
     ) {}
 
     async createAbsoluteEvent(flexibleEventEntity: FlexibleEventEntity){
+        const categoryValue = typeof flexibleEventEntity.category === 'string'
+                ? EventCategoryEnum[flexibleEventEntity.category as keyof typeof EventCategoryEnum] : flexibleEventEntity.category;
         let newFlexibleEvent:any;
         newFlexibleEvent = this.flexibleEventRepository.create(
             {
@@ -51,7 +53,7 @@ export class FlexibleEventEntityService {
                 from_time: flexibleEventEntity.from_time,
                 until_time: flexibleEventEntity.until_time,
                 location: flexibleEventEntity.location,
-                category: (EventCategoryEnum[flexibleEventEntity.category as unknown as keyof typeof EventCategoryEnum]),
+                category: categoryValue,
                 description: flexibleEventEntity.description,
             }
         );
