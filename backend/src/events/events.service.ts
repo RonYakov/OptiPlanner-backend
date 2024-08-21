@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { AbsoluteEvent } from '../shared/entities/absolute-event.entity';
 import {CreateEventDto} from "../shared/DTO/create-event.dto";
 import { AbsoluteEventEntityService, AbsoluteEventEntity } from "../shared/services/data-base-services/absoulte-event-entity/absolute-event-entity.service";
-import {EditAbsoluteEventDto} from "../shared/DTO/edit-event.dto";
+import {EditEventDto} from "../shared/DTO/edit-event.dto";
 import {FlexibleEvent} from "../shared/entities/flexible-event.entity";
 import { FlexibleEventEntityService, FlexibleEventEntity } from "../shared/services/data-base-services/flexible-event-entity/flexible-event-entity.service";
 import {EventPriorityEnum} from "../shared/enum/event-priority.enum";
@@ -23,7 +23,7 @@ export class EventsService {
         private flexibleEventService: FlexibleEventEntityService,
     ) {}
 
-    async createEvent(eventData: CreateEventDto){
+    async createEvent(eventData: CreateEventDto) :Promise<boolean>{
         const genericStartDate = new Date(new Date(eventData.start_date).setHours(0, 0, 0, 0));
         eventData.start_date = genericStartDate;
         eventData.end_date = genericStartDate;
@@ -34,15 +34,6 @@ export class EventsService {
             eventData.from_flexible_date = genericFlexStartDate;
             eventData.until_flexible_date = genericFlexEndDate;
         }
-        /*
-        some logic:
-        1. filtering which event are we working on
-        2. going to the function/functions that determine if the event can be placed
-         2.1 if yes , proceed
-         2.2 if no , return error/message/code
-         */
-        // console.log(eventData.user_id);
-        // return this.absoluteEventService.createAbsoluteEvent(eventData);
 
         let newEvent: CreateEventDto[] = [];
         if (eventData.repeat) {
@@ -51,12 +42,47 @@ export class EventsService {
             newEvent.push(eventData);
         }
 
-        await this.advancedPlacement(newEvent);
+        return await this.advancedPlacementForCreate(newEvent);
     }
 
-    async editEvent(eventData: EditAbsoluteEventDto) {
-        //todo: edit the event the new way
-        return this.absoluteEventService.editEvent(eventData);
+    async editEvent(eventData: EditEventDto) {
+        const category: EventCategoryEnum = eventData.category as EventCategoryEnum;
+
+        let newEvent: CreateEventDto = {
+            user_id: eventData.user_id,
+            name: eventData.name,
+            priority: eventData.priority,
+            flexible: eventData.flexible,
+            start_date: eventData.start_date,
+            end_date: eventData.end_date,
+            whole_day: eventData.whole_day,
+            from_flexible_date: eventData.from_flexible_date,
+            until_flexible_date: eventData.until_flexible_date,
+            start_time: eventData.start_time,
+            end_time: eventData.end_time,
+            from_flexible_time: eventData.from_flexible_time,
+            until_flexible_time: eventData.until_flexible_time,
+            alarms: eventData.alarms,
+            location: eventData.location,
+            category: category,
+            description: eventData.description,
+            repeat: eventData.repeat,
+            repeat_type: eventData.repeat_type,
+            repeat_interval: eventData.repeat_interval,
+            flexible_event_id: null
+        };
+
+        await this.flexibleEventService.deleteFlexibleEvent(eventData.id);
+        await this.absoluteEventService.deleteEvent(eventData.id);
+
+        if(!await this.createEvent(newEvent)) {
+            if(newEvent.flexible){
+                await this.flexibleEventService.createAbsoluteEvent(this.createFlexEventForDB(newEvent));
+            } else {
+                await this.absoluteEventService.createAbsoluteEvent(newEvent);
+            }
+        }
+
     }
 
     createRepeatedEvents(eventData: CreateEventDto){
@@ -88,22 +114,8 @@ export class EventsService {
         return repeatedEvents;
     }
 
-
-
-    /*
-    1. repeated events function: creates repeated events list. ido ^
-    2. basic placement function: checks if the event can be placed in the calendar. ido
-    3. advanced placement function: checks if the event can be placed in the calendar with additional conditions
-        3.1. this function calls the events in the date range of each event in the list
-        3.2. checks for each event in the list if it can be placed
-            3.2.1. if it is repeated, and one fails, return.
-            3.2.2. else (not repeated) if it failed, return.
-        3.3. makes changes as necessary
-     */
-
-
     //if this method gets multiple events, its can only because of repeated events (which is only absolute type)
-    async advancedPlacement(events: CreateEventDto[]): Promise<void> {
+    async advancedPlacementForCreate(events: CreateEventDto[]): Promise<boolean> {
         let eventsCopy: CreateEventDto[] = events.slice();
         let flexibleEventsThatChangedPreviously: FlexibleEvent[] = [];
         let isChanged: boolean = true;
@@ -130,6 +142,8 @@ export class EventsService {
             console.log("Event could not be placed");
             //TODO: return error
         }
+
+        return isChanged;
     }
 
     createFlexEventForDB(event: CreateEventDto): FlexibleEventEntity {
