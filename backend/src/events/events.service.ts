@@ -163,7 +163,7 @@ export class EventsService {
             repeatedEvents.push(newEvent);
         }
 
-        return repeatedEvents;
+        return repeatedEvents.reverse();
     }
 
     //if this method gets multiple events, its can only because of repeated events (which is only absolute type)
@@ -292,6 +292,10 @@ export class EventsService {
             exactStartTime,
             exactEndTime
         );
+
+        if(overlappingExactAbsoluteEvents.length === 0 && overlappingExactFlexibleEvents.length === 0){
+            return true;
+        }
 
         if (overlappingExactAbsoluteEvents.length !== 0) {
             console.log("Checking if the new event (flexible) overlaps with the existing events");
@@ -469,12 +473,12 @@ export class EventsService {
             until_time: event1.until_time
         };
 
-        const overlappingEvents = this.getOverlappingEvents(event1.user_id, eventRange, flexibleEventsThatChangedPreviously);
+        const overlappingEvents = await this.getOverlappingEvents(event1.user_id, eventRange, flexibleEventsThatChangedPreviously);
 
         const len = this.calculateEventLength(event1);
 
         for (let d = new Date(eventRange.from_date); d <= eventRange.until_date; d.setUTCDate(d.getUTCDate() + 1)) {
-            if (this.findAvailableSlot(d, event1, event2, len, event2StartDate, event2StartMinutes, event2EndMinutes, await overlappingEvents)) {
+            if (this.findAvailableSlot(d, event1, event2, len, event2StartDate, event2StartMinutes, event2EndMinutes, overlappingEvents)) {
                 return true;
             }
         }
@@ -528,8 +532,8 @@ export class EventsService {
             const rangeStartTime = this.getTimeOfDay(eventRange.from_time);
             const rangeEndTime = this.getTimeOfDay(eventRange.until_time);
 
-            return (eventStartTime > rangeStartTime && eventStartTime < rangeEndTime) ||
-                (eventEndTime > rangeStartTime && eventEndTime < rangeEndTime);
+            return (eventStartTime >= rangeStartTime && eventStartTime <= rangeEndTime) ||
+                (eventEndTime >= rangeStartTime && eventEndTime <= rangeEndTime);
         });
     }
 
@@ -560,15 +564,17 @@ export class EventsService {
         event2EndMinutes: number,
         overlappingEvents: { absolute: AbsoluteEvent[], flexible: FlexibleEvent[] }
     ): boolean {
-        const startTime = event1.from_time.getUTCHours() * 60 + event1.from_time.getUTCMinutes();
-        const endTime = event1.until_time.getUTCHours() * 60 + event1.until_time.getUTCMinutes();
+        const startTime = event1.from_time.getHours() * 60 + event1.from_time.getMinutes();
+        const endTime = event1.until_time.getHours() * 60 + event1.until_time.getMinutes();
+
+        let startForCreate = event1.from_time.getUTCHours() * 60 + event1.from_time.getMinutes();
 
         const eventsInDayD = {
             absolute: overlappingEvents.absolute.filter(event => event.start_date.getUTCDate() === d.getUTCDate()),
             flexible: overlappingEvents.flexible.filter(event => event.optimal_start_date.getUTCDate() === d.getUTCDate() && event.id !== event1.id)
         };
 
-        for (let i = startTime; i <= endTime - len; i += 15) {
+        for (let i = startTime; i <= endTime - len; i += 15, startForCreate += 15) {
             const intervalStart = i;
             const intervalEnd = i + len;
 
@@ -577,8 +583,8 @@ export class EventsService {
             }
 
             if (!this.isIntervalOverlapping(intervalStart, intervalEnd, eventsInDayD)) {
-                this.updateEventOptimalTimes(event1, d, intervalStart, intervalEnd);
-                console.log("Event placed at: " + event1.optimal_start_time.toUTCString() + " - " + event1.optimal_end_time.toUTCString());
+                this.updateEventOptimalTimes(event1, d, startForCreate, startForCreate + len);
+                console.log("Event placed at: " + event1.optimal_start_time.toString() + " - " + event1.optimal_end_time.toString());
                 return true;
             }
         }
