@@ -12,6 +12,13 @@ import {EventCategoryEnum} from "../shared/enum/event-category.enum";
 import {parse} from "ts-jest";
 import {RepeatTypeEnum} from "../shared/enum/repeat-type.enum";
 
+export class CreationFailedError extends Error {
+    constructor(public object1: any, message?: string) {
+        super(message);
+        this.name = 'CreationFailed';
+    }
+}
+
 @Injectable()
 export class EventsService {
     constructor(
@@ -22,6 +29,52 @@ export class EventsService {
         private absoluteEventService: AbsoluteEventEntityService,
         private flexibleEventService: FlexibleEventEntityService,
     ) {}
+
+    async changeFlexibleEventsToAbsoluteEvents(events: any) {
+        for(let event of events.changeEvents){
+            await this.flexibleEventService.deleteFlexibleEvent(event.id);
+            await this.absoluteEventService.createAbsoluteEvent({
+                user_id: event.user_id,
+                name: event.name,
+                priority: event.priority,
+                flexible: false,
+                start_date: event.start_date,
+                end_date: event.end_date,
+                whole_day: false,
+                start_time: event.start_time,
+                end_time: event.end_time,
+                location: event.location,
+                category: event.category,
+                description: event.description,
+                alarms: event.alarms,
+                repeat: event.repeat,
+                repeat_type: event.repeat_type,
+                repeat_interval: event.repeat_interval,
+                flexible_event_id: null
+            } as CreateEventDto);
+        }
+
+        await this.absoluteEventService.createAbsoluteEvent({
+            user_id: events.eventData.user_id,
+            name: events.eventData.name,
+            priority: events.eventData.priority,
+            flexible: false,
+            start_date: events.eventData.start_date,
+            end_date: events.eventData.end_date,
+            whole_day: false,
+            start_time: events.eventData.start_time,
+            end_time: events.eventData.end_time,
+            location: events.eventData.location,
+            category: events.eventData.category,
+            description: events.eventData.description,
+            alarms: events.eventData.alarms,
+            repeat: events.eventData.repeat,
+            repeat_type: events.eventData.repeat_type,
+            repeat_interval: events.eventData.repeat_interval,
+            flexible_event_id: null
+        } as CreateEventDto);
+    }
+
 
     async createEvent(eventData: CreateEventDto) :Promise<boolean>{
         const genericStartDate = new Date(new Date(eventData.start_date).setHours(0, 0, 0, 0));
@@ -82,7 +135,6 @@ export class EventsService {
                 await this.absoluteEventService.createAbsoluteEvent(newEvent);
             }
         }
-
     }
 
     createRepeatedEvents(eventData: CreateEventDto){
@@ -119,10 +171,12 @@ export class EventsService {
         let eventsCopy: CreateEventDto[] = events.slice();
         let flexibleEventsThatChangedPreviously: FlexibleEvent[] = [];
         let isChanged: boolean = true;
+        let problematicEvent = events[0];
 
         for (let event of eventsCopy) {
             if (!await this.advancedPlacementHelper(event, flexibleEventsThatChangedPreviously)) {
                 isChanged = false;
+                problematicEvent = event;
                 break;
             }
         }
@@ -139,8 +193,10 @@ export class EventsService {
                 await this.flexibleEventService.editFlexibleEvent(event);
             }
         } else {
-            console.log("Event could not be placed");
-            //TODO: return error
+            let overLappingFlexEvents = await this.OverlappingFlexEvents(problematicEvent.user_id, problematicEvent.start_date,
+                problematicEvent.end_date, this.extractTime(problematicEvent.start_time), this.extractTime(problematicEvent.end_time));
+
+            throw new CreationFailedError (overLappingFlexEvents, "Event creation failed")
         }
 
         return isChanged;
@@ -239,7 +295,11 @@ export class EventsService {
 
         if (overlappingExactAbsoluteEvents.length !== 0) {
             console.log("Checking if the new event (flexible) overlaps with the existing events");
-            return this.findOriginalEventSpot(newEvent, overlappingAbsoluteEvents, overlappingFlexibleEvents);
+            if (!this.findOriginalEventSpot(newEvent, overlappingAbsoluteEvents, overlappingFlexibleEvents)) {
+                throw new CreationFailedError (overlappingFlexibleEvents, "Event creation failed")
+            } else{
+                return true;
+            }
         }
         else {
             console.log("Checking if the new event (flexible) overlaps with the existing events");
@@ -258,7 +318,11 @@ export class EventsService {
                 if(flag){
                     return true;
                 } else {
-                    return this.findOriginalEventSpot(newEvent, overlappingAbsoluteEvents, overlappingFlexibleEvents);
+                    if(!this.findOriginalEventSpot(newEvent, overlappingAbsoluteEvents, overlappingFlexibleEvents)) {
+                        throw new CreationFailedError (overlappingFlexibleEvents, "Event creation failed")
+                    } else {
+                        return true;
+                    }
                 }
             } else {
                 flag = this.findOriginalEventSpot(newEvent, overlappingAbsoluteEvents, overlappingFlexibleEvents);
@@ -275,7 +339,12 @@ export class EventsService {
                     flag = true;
                 }
 
-                return flag;
+                if(!flag) {
+                    throw new CreationFailedError (overlappingFlexibleEvents, "Event creation failed")
+                } else {
+                    return true;
+                }
+
             }
         }
     }
@@ -345,9 +414,28 @@ export class EventsService {
         );
     }
 
+    async OverlappingFlexEvents(
+        userId: number,
+        startDate: Date,
+        endDate: Date,
+        startTime: string,
+        endTime: string
+    ): Promise<FlexibleEvent[]> {
+        let events = await this.flexibleEventService.getFlexibleEventsByDateRange(userId, startDate, endDate);
+
+        return events.filter(event =>
+            this.isTimeOverlapping(
+                this.extractTime(event.optimal_start_time),
+                this.extractTime(event.optimal_end_time),
+                startTime,
+                endTime
+            )
+        );
+    }
+
     private extractTime(dateTimeString: string | Date): string {
         const date = typeof dateTimeString === 'string' ? new Date(dateTimeString) : dateTimeString;
-        return `${date.getUTCHours().toString().padStart(2, '0')}:${date.getUTCMinutes().toString().padStart(2, '0')}`;
+        return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
     }
 
     private timeToMinutes(timeString: string): number {
@@ -458,8 +546,8 @@ export class EventsService {
     }
 
     private calculateEventLength(event: FlexibleEvent): number {
-        return (event.optimal_end_time.getUTCHours() * 60 + event.optimal_end_time.getUTCMinutes()) -
-            (event.optimal_start_time.getUTCHours() * 60 + event.optimal_start_time.getUTCMinutes());
+        return (event.optimal_end_time.getHours() * 60 + event.optimal_end_time.getMinutes()) -
+            (event.optimal_start_time.getHours() * 60 + event.optimal_start_time.getMinutes());
     }
 
     private findAvailableSlot(
@@ -549,7 +637,6 @@ export class EventsService {
             }
         }
 
-        console.log(`Could not find a suitable slot for event: ${newEvent.name}`);
         return false;
     }
 
@@ -569,11 +656,11 @@ export class EventsService {
     ): { start: Date, end: Date } | null {
         const dayStart = new Date(currentDate);
         const flexibleStartTime = new Date(newEvent.from_flexible_time);
-        dayStart.setUTCHours(flexibleStartTime.getUTCHours(), flexibleStartTime.getUTCMinutes(), 0, 0);
+        dayStart.setHours(flexibleStartTime.getHours(), flexibleStartTime.getMinutes(), 0, 0);
 
         const dayEnd = new Date(currentDate);
         const flexibleEndTime = new Date(newEvent.until_flexible_time);
-        dayEnd.setUTCHours(flexibleEndTime.getUTCHours(), flexibleEndTime.getUTCMinutes(), 59, 999);
+        dayEnd.setHours(flexibleEndTime.getHours(), flexibleEndTime.getMinutes(), 59, 999);
 
         const eventsInDay = {
             absolute: overlappingAbsoluteEvents.filter(event => this.isSameDay(new Date(event.start_date), currentDate)),
@@ -586,9 +673,9 @@ export class EventsService {
 
             if (!this.isIntervalOverlapping(intervalStart, intervalEnd, eventsInDay)) {
                 const startTime = new Date(currentDate);
-                startTime.setUTCHours(Math.floor(intervalStart / 60), intervalStart % 60, 0, 0);
+                startTime.setHours(Math.floor(intervalStart / 60), intervalStart % 60, 0, 0);
                 const endTime = new Date(currentDate);
-                endTime.setUTCHours(Math.floor(intervalEnd / 60), intervalEnd % 60, 0, 0);
+                endTime.setHours(Math.floor(intervalEnd / 60), intervalEnd % 60, 0, 0);
                 return { start: startTime, end: endTime };
             }
         }
