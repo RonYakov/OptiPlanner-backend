@@ -38,16 +38,16 @@ export class EventsService {
                 name: event.name,
                 priority: event.priority,
                 flexible: false,
-                start_date: event.start_date,
-                end_date: event.end_date,
+                start_date: event.optimal_start_date,
+                end_date: event.optimal_end_date,
                 whole_day: false,
-                start_time: event.start_time,
-                end_time: event.end_time,
+                start_time: event.optimal_start_time,
+                end_time: event.optimal_end_time,
                 location: event.location,
                 category: event.category,
                 description: event.description,
                 alarms: event.alarms,
-                repeat: event.repeat,
+                repeat: false,
                 repeat_type: event.repeat_type,
                 repeat_interval: event.repeat_interval,
                 flexible_event_id: null
@@ -62,7 +62,7 @@ export class EventsService {
             start_date: events.eventData.start_date,
             end_date: events.eventData.end_date,
             whole_day: false,
-            start_time: events.eventData.start_time,
+            start_time: events.eventData.start_date,
             end_time: events.eventData.end_time,
             location: events.eventData.location,
             category: events.eventData.category,
@@ -73,6 +73,7 @@ export class EventsService {
             repeat_interval: events.eventData.repeat_interval,
             flexible_event_id: null
         } as CreateEventDto);
+
     }
 
 
@@ -174,7 +175,7 @@ export class EventsService {
         let problematicEvent = events[0];
 
         for (let event of eventsCopy) {
-            if (!await this.advancedPlacementHelper(event, flexibleEventsThatChangedPreviously)) {
+            if (!event.whole_day && !await this.advancedPlacementHelper(event, flexibleEventsThatChangedPreviously)) {
                 isChanged = false;
                 problematicEvent = event;
                 break;
