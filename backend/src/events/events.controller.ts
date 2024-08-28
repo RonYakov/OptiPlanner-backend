@@ -39,28 +39,18 @@ export class EventsController {
 
   @Post('/edit-change-events')
   async editChangeEvents(
-      @Body() eventData: EditEventDto, @Body() changeEvents: EditEventDto[]
+      @Body() eventData: EditEventDto, @Body() changeEvents: any[]
   ) {
-    try {
       await this.eventService.changeFlexibleEventsToAbsoluteEvents(changeEvents);
       return {status: 200};
-
-    } catch (e) {
-        return {status: 4001, object1: e.object1};
-    }
   }
 
   @Post('/create-change-events')
   async createChangeEvents(
-      @Body() eventData: CreateEventDto, @Body() changeEvents: EditEventDto[]
+      @Body() eventData: CreateEventDto, @Body() changeEvents: any[]
   ) {
-    try{
       await this.eventService.changeFlexibleEventsToAbsoluteEvents(changeEvents);
       return {status: 200};
-
-    } catch (e) {
-        return {status: 4001, object1: e.object1};
-    }
   }
 
 
