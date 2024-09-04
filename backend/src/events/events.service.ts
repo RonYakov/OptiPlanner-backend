@@ -62,7 +62,7 @@ export class EventsService {
             start_date: events.eventData.start_date,
             end_date: events.eventData.end_date,
             whole_day: false,
-            start_time: events.eventData.start_date,
+            start_time: events.eventData.start_time,
             end_time: events.eventData.end_time,
             location: events.eventData.location,
             category: events.eventData.category,
