@@ -16,7 +16,7 @@ In our fast-paced world, managing time efficiently is a constant challenge. Peop
 
 ## System Architecture
 * Client: Built using Angular, providing a responsive and intuitive interface.
-* Server: Constructed with NestJS, offering robust backend services.
+* Server: Constructed with NestJS.
 * AWS Modules: Cognito- Handles user authentication, storing registration details, managing logins, and verifying users.
 
 ## Development Tools
